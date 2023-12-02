@@ -182,7 +182,57 @@ README for HW
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+# Проверим конфигурацию веб-сервера, выясним, где расположен документ, соответствующий приветственной странице веб-сервера
+# editing its Virtual Host file found in 
+/etc/apache2/sites-enabled/000-default.conf
+# move to
+vim /etc/apache2/sites-enabled/000-default.conf
+# find VHost
+# We can modify its content in 
+/var/www/html
 
+# Добавим/создадим на сервере простой документ формата HTML (образец документа и формата можно найти в Интернет https://www.w3schools.com/html/), содержащий некоторый текст, например "Hello from HTTP Server", запомним путь (URL), по которому мы можем обращаться к этому документу на сервере
+vim test.html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+
+<h1>This is a Heading</h1>
+<p>Hello from HTTP Server</p>
+
+</body>
+</html> 
+
+vim index.html
+ <a href="test.html" target="_blank">Opening test.html</a> 
+
+
+
+#	Создадим для нашего веб-сервера второй виртуальный хост.
+cd  /etc/apache2/sites-available/
+sudo cp 000-default.conf second.conf
+# Назначим нашим виртуальным хостам различные имена.
+sudo vim second.conf
+    ServerAdmin vpeshkur@debian.by
+	DocumentRoot /var/www/second
+sudo vim 000-default.conf
+# Внесем имена в локальный файл конфигурации ДНС hosts на вашем рабочем компьютере.
+sudo vim /etc/hosts
+​
+# Разместим в новом виртуальном хосте нашу дополнительную страницу из первого шага практики.
+sudo mkdir /var/www/second
+cp /var/www/html/test.html /var/www/second/index.html
+vim /var/www/second/index.html
+​
+sudo a2ensite second.conf
+sudo systemctl reload apache2
+	
+# Убедимся, что приветственная страница веб-сервера и дополнительная страница открываются по разным именам веб-сервера
+www.second.by
+first.by
 
 
 
