@@ -90,5 +90,104 @@ README for HW
   
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+# Установка и настройка WordPress
+  sudo wget https://wordpress.org/latest.tar.gz
+  sudo tar -zxvf latest.tar.gz
+  sudo cp -R wordpress/* /var/www/html/
+  sudo chown -R www-data:www-data /var/www/html/
+  sudo chmod -R 755 /var/www/html/
+
+# Настройка виртуального хоста Apache
+  sudo nano /etc/apache2/sites-available/wordpress.conf
+# Вставить блок конфигурации в файл
+  <VirtualHost *:80>
+      ServerAdmin admin@example.com
+      DocumentRoot /var/www/html/
+      ServerName yourdomain.com
+
+    <Directory /var/www/html/>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+# Сохранить и активировать
+  sudo a2ensite wordpress.conf
+
+# Отключить стандартный виртуальный хост
+  sudo a2dissite 000-default.conf
+
+# Перезапустить Apache
+  sudo service apache2 restart
+
+# Завершение установки через веб-интерфейс 
+# В браузере и перейти по адресу http://yourdomain.com (замените yourdomain.com на свое доменное имя или IP-адрес).
+# Следовать инструкциям на экране для завершения установки WordPress.
+# При настройке базы данных ввести следующие данные:
+# Имя базы данных: wordpress
+# Имя пользователя: wordpressuser
+# Пароль: password
+# Хост базы данных: localhost
+# Префикс таблиц: по умолчанию wp_
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Установка и настройка CMS Joomla в качестве второго хоста
+
+# Создать файл конфигурации для второго хоста Joomla  
+  sudo nano /etc/apache2/sites-available/joomla.conf
+
+# Вставить блок в файл
+ <VirtualHost *:80>
+     ServerAdmin admin@example.com
+     DocumentRoot /var/www/joomla/
+     ServerName joomla.example.com
+     ServerAlias www.joomla.example.com
+
+     <Directory /var/www/joomla/>
+         Options FollowSymLinks
+         AllowOverride All
+         Require all granted
+     </Directory>
+
+     ErrorLog ${APACHE_LOG_DIR}/error.log
+     CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+# Заменить joomla.example.com на желаемое доменное имя 
+# Сохранить и активировать хост
+  sudo a2ensite joomla.conf
+
+# Перезапустить Apache 
+  sudo service apache2 restart
+
+# Установка Joomla
+  sudo wget https://downloads.joomla.org/ru/cms/joomla5/5-0-1/Joomla_5-0-1-Stable-Full_Package.tar.gz
+  sudo tar -xf Joomla_5-0-1-Stable-Full_Package.tar.gz
+  sudo cp -R joomla/* /var/www/html/
+  sudo chown -R www-data:www-data /var/www/joomla/
+  sudo chmod -R 755 /var/www/joomla/
+
+# Завершение установки через веб-интерфейс 
+# В браузере и перейти по адресу http://joomla.example.com (заменить joomla.example.com на свое доменное имя для Joomla).
+# Следовать инструкциям на экране для завершения установки Joomla.
+# При настройке базы данных ввести следующие данные:
+# Тип базы данных: MySQLi
+# Имя сервера базы данных: localhost
+# Имя пользователя базы данных: joomlauser
+# Пароль базы данных: password
+# Префикс таблиц: по умолчанию jos_ (или выберать другой префикс по своему усмотрению)
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+
+
+
+
+
+
+
+  
