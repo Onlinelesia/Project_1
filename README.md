@@ -20,64 +20,67 @@ VM2 – установить сервис баз данных MySQL. Настр�
   sudo apt install apache2
 ```
 
- После завершения установки сервер Apache должен быть запущен автоматически. Проверить его статус командой
-  sudo systemctl status apache2
-
- Установить фаервол
- 
- ```
-  sudo apt install ufw
+После завершения установки сервер Apache должен быть запущен автоматически. Проверить его статус командой
 ```
- 
- Включить фаервол UFW
+sudo systemctl status apache2
+sudo systemctl is-enabled apache2
+```
+
+Установить фаервол
  
 ```
-  sudo ufw enable
+sudo apt install ufw
 ```
-
- Проверить статус фаервола
-
-```
-  sudo ufw status
-```
-
- Добавить правило, чтобы входящие запросы были разрешены извне для порта 80
+ 
+Включить фаервол UFW
  
 ```
-  sudo ufw allow 80
+sudo ufw enable
 ```
 
- Проверить работу Apache
- Веб-сервер Apache должен быть доступен по адресу http://localhost в браузере. Должна отобразиться страница приветствия Apache, если все установлено и работает верно.
+Проверить статус фаервола
+
+```
+sudo ufw status
+```
+
+Добавить правило, чтобы входящие запросы были разрешены извне для порта 80
+ 
+```
+sudo ufw allow 80
+```
+
+Проверить работу Apache
+Веб-сервер Apache должен быть доступен по адресу http://localhost в браузере. Должна отобразиться страница приветствия Apache, если все установлено и работает верно.
 
 ---------------------------------------------------------------------------------------------
 
 # Установить интерпретатор php
 
 ```
-  sudo apt update
-  sudo apt install php7.4 libapache2-mod-php7.4 php-common php7.4 php7.4-cli php7.4-common php7.4-json php7.4-opcache php7.4-readline
+sudo apt update
+sudo apt install php7.4 libapache2-mod-php7.4 php-common php7.4 php7.4-cli php7.4-common php7.4-json php7.4-opcache php7.4-readline
 ```
 
 Проверка модуля в Apache
 
 ```
-  sudo apachectl -M                              # д.быть php7_module
-  sudo a2enmod php7.4                            # добавление модуля, если его нет
-  sudo a2dismod php7.4                           # disable
+sudo apachectl -M                              # д.быть php7_module
+sudo a2enmod php7.4                            # добавление модуля, если его нет
+sudo a2dismod php7.4                           # disable
 ```
 
- Перезапуск Apache после внесения изменений
- ```
-  sudo systemctl restart apache2
+Перезапуск Apache после внесения изменений
+```
+sudo systemctl restart apache2
 ```
 
 Проверить работу PHP
 В директории /var/www/html создать файл и прописать код 
 
 ```
-  sudo nano /var/www/html/info.php
-  <?php phpinfo(); ?>
+sudo nano /var/www/html/info.php
+<?php phpinfo(); ?>
 ```
 
 В браузере в адресной строке ввести http://localhost/info.php
@@ -88,37 +91,46 @@ VM2 – установить сервис баз данных MySQL. Настр�
 # На VM2 установить MySQL/MariaDB
 
 ```
-  sudo apt update
-  sudo apt install mariadb-server
+sudo apt update
+sudo apt install mariadb-server mariadb-client
+```
+Проверить статус
+```
+sudo systemctl status mariadb.service
+sudo systemctl is-enabled mariadb.service
 ```
 
-# Настройка MariaDB
+Настройка MariaDB
 
 ```
-  sudo mysql_secure_installation
+sudo mysql_secure_installation
 ```
-Сделать MariaDB доступной для всех адресов
+Сделать MariaDB доступной для всех 
 
 ```
-  sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
 ```
 
 Строку bind-address = 127.0.0.1 закомментировать, а ниже добавить
 
 ```
-  bind-address = 0.0.0.0
+bind-address = 0.0.0.0
 ```
 
 Сохранить измения и перезапустить сервис
 
 ```
-  sudo service mariadb restart
+sudo service mariadb restart
+```
+Настроить firewall
+```
+sudo ufw disable
 ```
 
 Создать 2 БД
 
 ```
-  sudo mysql -u root -p
+sudo mysql -u root -p
 ```
 ```
   CREATE DATABASE wordpress;
@@ -137,19 +149,23 @@ VM2 – установить сервис баз данных MySQL. Настр�
 # Установка и настройка WordPress
 
 ```
-  sudo wget https://wordpress.org/latest.tar.gz
-  sudo tar -zxvf latest.tar.gz
-  sudo cp -R wordpress/* /var/www/html/
-  sudo chown -R www-data:www-data /var/www/html/
-  sudo chmod -R 755 /var/www/html/
+sudo ufw status
+sudo ufw enable
+sudo ufw allow OpenSSH
+sudo ufw allow 'Apache Full'
+sudo wget https://wordpress.org/latest.tar.gz
+sudo tar -zxvf latest.tar.gz
+sudo cp -R wordpress/* /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/
+sudo chmod -R 755 /var/www/html/
 ```
 
 Настройка виртуального хоста Apache
 ```
-  sudo nano /etc/apache2/sites-available/wordpress.conf
+sudo nano /etc/apache2/sites-available/wordpress.conf
 ```
- Вставить блок конфигурации в файл
- ```
+Вставить блок конфигурации в файл
+```
   <VirtualHost *:80>
       ServerAdmin admin@example.com
       DocumentRoot /var/www/html/
@@ -168,17 +184,52 @@ VM2 – установить сервис баз данных MySQL. Настр�
 
 Сохранить и активировать
 ```
-  sudo a2ensite wordpress.conf
+sudo a2ensite wordpress.conf
 ```
 
 Отключить стандартный виртуальный хост
 ```
-  sudo a2dissite 000-default.conf
+sudo a2dissite 000-default.conf
 ```
 
- Перезапустить Apache
- ```
-  sudo service apache2 restart
+Перезапустить Apache
+```
+sudo service apache2 restart
+```
+Настроить конфиг wordpress 
+```
+sudo mv wp-config-sample.php wp-config.php 
+sudo nano wp-config.php
+```
+Заменить значения на созданные в базе данных на VM2
+DB_NAME - имя базы данных
+DB_USER - имя пользователя бд
+DB_PASSWORD - пароль
+DB_HOST - IP VM2
+
+Настраиваем конфиг wordpress для сервера
+```
+sudo nano /etc/apache2/sites-available/wordpress.conf
+
+<VirtualHost *:80>
+ServerName site1.by
+ServerAdmin admin@localhost
+DocumentRoot /var/www/html/wordpress.com
+ErrorLog ${APACHE_LOG_DIR}/error.log
+CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+
+Настраиваем конфиг apache2
+```
+sudo nano /etc/apache/apache2.conf
+В конце дописать
+ServerName localhost
+```
+Перезапустить
+```
+apachectl -t
+sudo systemctl restart apache2
 ```
 
 Завершение установки через веб-интерфейс 
@@ -191,12 +242,18 @@ VM2 – установить сервис баз данных MySQL. Настр�
 Хост базы данных: localhost
 Префикс таблиц: по умолчанию wp_
 
+Можно проверить базу wordpress на VM2
+```
+USE wordpress;
+show tables;
+```
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Установка и настройка CMS Joomla в качестве второго хоста
 
 Создать файл конфигурации для второго хоста Joomla  
 ```
-  sudo nano /etc/apache2/sites-available/joomla.conf
+sudo nano /etc/apache2/sites-available/joomla.conf
 ```
 
 Вставить блок в файл
@@ -217,25 +274,31 @@ VM2 – установить сервис баз данных MySQL. Настр�
      CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 ```
+Добавить права для папки
+```
+sudo chown -R www-data: /var/www/html/joomla.com/
+sudo chmod -R 775 /var/www/html/joomla.com/
+```
 
 Заменить joomla.example.com на желаемое доменное имя 
 Сохранить и активировать хост
 ```
-  sudo a2ensite joomla.conf
+sudo a2ensite joomla.conf
+sudo a2enmod rewrite
 ```
 
 Перезапустить Apache 
 ```
-  sudo service apache2 restart
+sudo service apache2 restart
 ```
 
 Установка Joomla
 ```
-  sudo wget https://downloads.joomla.org/ru/cms/joomla5/5-0-1/Joomla_5-0-1-Stable-Full_Package.tar.gz
-  sudo tar -xf Joomla_5-0-1-Stable-Full_Package.tar.gz
-  sudo cp -R joomla/* /var/www/html/
-  sudo chown -R www-data:www-data /var/www/joomla/
-  sudo chmod -R 755 /var/www/joomla/
+sudo wget https://downloads.joomla.org/ru/cms/joomla5/5-0-1/Joomla_5-0-1-Stable-Full_Package.tar.gz
+sudo tar -xf Joomla_5-0-1-Stable-Full_Package.tar.gz
+sudo cp -R joomla/* /var/www/html/
+sudo chown -R www-data:www-data /var/www/joomla/
+sudo chmod -R 755 /var/www/joomla/
 ```
 
 Завершение установки через веб-интерфейс 
@@ -248,13 +311,18 @@ VM2 – установить сервис баз данных MySQL. Настр�
 Пароль базы данных: password
 Префикс таблиц: по умолчанию jos_ (или выберать другой префикс по своему усмотрению)
 
+Можно проверить базу joomla на VM2
+```
+USE joomla;
+show tables;
+```
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Инструкция преподавателя:
 
 README 1
 
- Установим веб-сервер Apache используя возможности стандартного пакетного менеджера, при необходимости решим конфликты запуска
+Установим веб-сервер Apache используя возможности стандартного пакетного менеджера, при необходимости решим конфликты запуска
 ```
 sudo apt update
 sudo apt install apache2
