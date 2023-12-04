@@ -315,6 +315,99 @@ sudo chmod -R 755 /var/www/joomla/
 USE joomla;
 show tables;
 ```
+
+## ___________________________________________________________________________________________________
+
+# Установка и настройка сервиса Nginx в качестве обратного прокси (reverse proxy), который настроен отдавать статическое содержимое вебсайтов (изображения, css, js) без использования Apache, и установлен «перед» ним со стороны входящих запросов от клиентов.
+
+Установить NGINX
+```
+sudo apt-get update
+sudo apt-get install nginx
+```
+Настроить конфиг для nginx
+```
+sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/000-default.conf
+sudo nano default
+```
+```
+server_name _;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+                proxy_pass http://192.168.56.125:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location ~* \.(jpg|jpeg|gif|png|ico|css|js)$ {
+                proxy_pass http://192.168.56.125:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+        }
+```
+Удалить файл в папке sites-enabled 
+```
+sudo unlink /etc/nginx/sites-enabled/default
+```
+Создать символьную ссылку 
+```
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+```
+Изменить порт на 8080
+```
+sudo nano /etc/apache2/ports.conf
+Listen 8080
+```
+Изменить порт в конфиге apache2
+```
+sudo nano /etc/apache2/sites-available/000-default.conf
+VirtualHost *:8080>
+```
+Перезагрузить сервера и проверить работу
+```
+sudo systemctl restart apache2
+sudo systemctl restart nginx
+sudo systemctl status apache2
+sudo systemctl status nginx
+```
+Отключить firewall
+```
+sudo ufw disable
+```
+
+Проверить выполнение
+В адресной строке браузера ввести IP
+Должна появиться страница Apache, нажать F12, выбрать Сеть, проверить, чтобы был статус 200.
+Значит все ок.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## ___________________________________________________________________________________________________
 
 Инструкция преподавателя:
