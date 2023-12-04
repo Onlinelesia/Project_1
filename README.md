@@ -250,6 +250,224 @@ VM2 – установить сервис баз данных MySQL. Настр�
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Инструкция преподавателя:
+
+README 1
+
+ Установим веб-сервер Apache используя возможности стандартного пакетного менеджера, при необходимости решим конфликты запуска
+```
+sudo apt update
+sudo apt install apache2
+```
+
+ После окончания установки откроем стандартную приветственную страницу веб-сервера в браузере
+http://192.168.1.32/
+
+ Проверим конфигурацию веб-сервера, выясним, где расположен документ, соответствующий приветственной странице веб-сервера
+ editing its Virtual Host file found in 
+/etc/apache2/sites-enabled/000-default.conf
+ move to
+vim /etc/apache2/sites-enabled/000-default.conf
+ find VHost
+ We can modify its content in 
+/var/www/html
+
+ Добавим/создадим на сервере простой документ формата HTML (образец документа и формата можно найти в Интернет https://www.w3schools.com/html/), содержащий некоторый текст, например "Hello from HTTP Server", запомним путь (URL), по которому мы можем обращаться к этому документу на сервере
+```
+vim test.html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+
+<h1>This is a Heading</h1>
+<p>Hello from HTTP Server</p>
+
+</body>
+</html> 
+```
+```
+vim index.html
+ <a href="test.html" target="_blank">Opening test.html</a> 
+```
+ # ----------------------------------------
+  Установим сервер баз данных MySQL/Mariadb, а так же cli-инструмент работы с базой данных mysql используя возможности стандартного пакетного менеджера.
+```
+sudo apt install wget
+wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
+sudo apt install ./mysql-apt-config_0.8.22-1_all.deb
+sudo apt update
+```
+```
+sudo apt install mysql-server
+sudo service mysql status
+sudo apt install mysql-client
+```
+ Подключимся к нашей базе данных с помощью cli-инструмента, выведем список существующих баз данных.
+```
+mysql -u root -p   (qwerty123)
+show databases;
+or
+mysql
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'qwerty';
+mysql -u root -pqwerty
+```
+
+Создадим новую базу данных.
+```
+CREATE DATABASE myfirstdb;
+USE myfirstdb;
+```
+ Создадим новую таблицу со структурой по выбору (3-5 полей).
+```
+SHOW TABLES;
+CREATE TABLE towns (name VARCHAR(20), district VARCHAR(20), owner_fio VARCHAR(20), start DATE);
+DESCRIBE 
+```
+ Добавим две записи  в новую таблицу.
+```
+LOAD DATA LOCAL INFILE '/path/towns.txt' INTO TABLE towns;
+INSERT INTO towns VALUES ('Kobrin','Brest','Sidorov D.D.','1356-01-01');
+```
+ Сделаем выборку данных по всей таблице
+```
+SELECT * FROM towns;
+```
+ Сделаем резервную копию данных в базе в файл на файловой системе сервера (mysqldump)
+```
+mysqldump -uroot -p --all-databases > dump.sql
+```
+ Удалим первую запись
+```
+DELETE FROM towns as t WHERE t.name='Kobrin';
+```
+ Удалим созданную таблицу.
+```
+DROP TABLE towns;
+```
+ Удалим созданную базу данных
+```
+DROP DATABASE myfirstdb;
+```
+ Удалим сервер баз данных MySQL/Mariadb c данной машины.
+```
+sudo apt purge mysql-server
+```
+
+README 2
+
+  Установим интерпретатор PHP, используя возможности стандартного пакетного менеджера.
+```
+sudo apt update
+sudo apt install php7.4 libapache2-mod-php7.4 php-common php7.4 php7.4-cli php7.4-common php7.4-json php7.4-opcache php7.4-readline
+​
+```
+
+Запустим интерпретатор.
+Проверка модуля в Apache
+```
+  sudo apachectl -M # д.быть php7_module
+  sudo a2enmod php7.4 #add module
+  sudo a2dismod php7.4 #disable
+```
+ После изменений - рестарт apache
+  ```
+  sudo systemctl restart apache2
+  sudo vim /var/www/html/info.php
+    <?php phpinfo();?>
+​  
+```
+
+http://192.168.1.32/info.php
+Создадим на сервере простейший PHP-файл (пример https://www.php.net/manual/en/tutorial.firstpage.php)
+Изменим его содержимое на "Hello IT-Academy"
+Передадим интерпретатору PHP параметром данный файл, изучим вывод.
+php first.php
+​
+Создадим для нашего веб-сервера второй виртуальный хост.
+```
+cd  /etc/apache2/sites-available/
+sudo cp 000-default.conf second.conf
+```
+Назначим нашим виртуальным хостам различные имена.
+```
+sudo vim second.conf
+    ServerAdmin vpeshkur@debian.by
+	DocumentRoot /var/www/second
+sudo vim 000-default.conf
+```
+Внесем имена в локальный файл конфигурации ДНС hosts на вашем рабочем компьютере.
+```
+sudo vim /etc/hosts
+```
+​
+Разместим в новом виртуальном хосте нашу дополнительную страницу из первого шага практики.
+```
+sudo mkdir /var/www/second
+cp /var/www/html/test.html /var/www/second/index.html
+vim /var/www/second/index.html
+​
+```
+
+```
+sudo a2ensite second.conf
+sudo systemctl reload apache2
+```
+	
+Убедимся, что приветственная страница веб-сервера и дополнительная страница открываются по разным именам веб-сервера
+www.second.by
+first.by
+​
+Переведем второй виртуальный хост в режим работы как по HTTP так и по HTTPS
+Сгенерируем и подключим в настройку веб-сервера само-подписанный SSL-сертификат для второго виртуального хоста
+```
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/Second-apache-selfsigned.key -out /etc/ssl/certs/Second-apache-selfsigned.crt
+sudo openssl x509 -text -noout -in /etc/ssl/certs/apache-selfsigned.crt #Просмотр серта
+```
+
+```
+sudo vim /etc/apache2/sites-available/second.conf
+<VirtualHost *:443>
+   ServerName www.second.by
+   DocumentRoot /var/www/second
+​
+   SSLEngine on
+   SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
+   SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
+</VirtualHost>
+```
+активировать файл конфигурации
+```
+sudo a2ensite second.conf
+```
+check errors
+```
+sudo apache2ctl configtest
+Invalid command 'SSLEngine', perhaps misspelled or defined by a module not included in the server configuration
+sudo a2enmod ssl
+sudo systemctl reload apache2
+sudo apache2ctl configtest
+```
+
+Убедимся, что веб-сервер для второго виртуального хоста по протоколу HTTPS отдает наш сертификат
+https://second.by/
+​
+Настроим корректное перенаправление с HTTP на HTTPS для второго виртуального хоста
+​
+```
+<VirtualHost *:80>
+	ServerName www.second.by
+	Redirect / https://second.by/
+</VirtualHost>
+```
+```
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+```
+
+
 Проверим конфигурацию веб-сервера, выясним, где расположен документ, соответствующий приветственной странице веб-сервера
 editing its Virtual Host file found in 
 ```
