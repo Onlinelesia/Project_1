@@ -1,4 +1,4 @@
-# Project_1
+# LAMP
 README for HW
 
 ## Задание: 
